@@ -1,43 +1,59 @@
-# UmbrellaLib (Tauri edition)
+# UmbrellaLib
 
-Windows game library launcher built with Tauri 2 and the system WebView2 runtime. The existing Electron project remains available alongside this migration.
+UmbrellaLib is a Windows game-library launcher that brings games from several PC launchers and emulators into one library. It is built with Tauri 2, Rust, and a lightweight HTML/CSS/JavaScript interface, with a bundled Node.js service for scanning games and processing artwork.
 
-## Run the portable build
+## Download and install
 
-Extract the downloaded ZIP to a folder, then open `UmbrellaLib.exe` from that folder. Keep the `resources` directory beside it; it contains the bundled scanner runtime. Node.js is not required to run the app.
+1. Open the repository’s **Releases** page and download the latest `UmbrellaLib-...zip` asset.
+2. Extract the **entire ZIP** to a folder. Keep `UmbrellaLib.exe` and the `resources` folder together.
+3. Open `UmbrellaLib.exe`.
 
-The portable ZIP targets 64-bit Windows PCs. It uses the Microsoft Edge WebView2 Runtime for its window; if that runtime is missing, install WebView2 on the PC before launching. The bundled Node runtime means Node.js does not need to be installed. The app stores its own settings and game-library cache in the current Windows user's app-data folder, and scans that PC for installed games. Game files and emulator installs are not included in the ZIP. This build is not for macOS or Linux.
+The portable build targets **64-bit Windows** and requires the Microsoft Edge WebView2 Runtime. Node.js does not need to be installed because the scanner runtime is bundled. The ZIP does not include games, emulators, or launcher installations.
 
-## Development
+## Features
 
-Install Node.js, Rust, and the Microsoft C++ build tools with the Windows 10/11 SDK. Then run:
+- Scans Steam, Epic Games, GOG, EA app, Ubisoft Connect, Xbox, Windows shortcuts, Cemu, and Dolphin.
+- Lets you add a regular PC game manually by selecting its main `.exe`.
+- Saves game-specific settings and keeps manually added games across scans.
+- Caches scan results, game icons, and artwork to make later launches and scans faster.
+- Supports searching, sorting, favorites, game details, and artwork refresh.
+- Click a game's cover to launch it. Right-click a game tile to open that game's settings.
+
+## Add games
+
+Open **Settings**, enable the sources you want to scan, and choose **Save and rescan**.
+
+### Add a regular PC game
+
+In **Add a game manually**, browse to the game's main `.exe`. You can enter a display name or let UmbrellaLib use the executable's name. The game remains in your library across scans.
+
+### Add a Cemu game
+
+1. In **Settings → Emulator locations**, browse to `Cemu.exe`.
+2. Make sure the **Cemu** scan source is enabled. Cemu's configured game paths and standard installed titles are scanned automatically.
+3. If the game is still missing, choose **Add folder** under **Extra emulator game folders**. Select the parent folder that contains the game's folder—not its `meta` subfolder or the game folder itself.
+
+For an extracted Wii U game, the game folder should contain `meta/meta.xml` and a `code` or `content` folder. For `.wua` or `.wux` games, select the folder containing those files. Then choose **Save and rescan** and look under the **Cemu** filter.
+
+### Add a Dolphin game
+
+Set the Dolphin executable in **Settings → Emulator locations**. Dolphin's configured ISO paths are scanned automatically. You can also use **Add folder** for a directory containing `.iso`, `.wbfs`, `.rvz`, `.ciso`, `.gcm`, or `.wia` files.
+
+## Troubleshooting
+
+- **The app does not open:** confirm WebView2 Runtime is installed and that you extracted the whole ZIP, including `resources`.
+- **A launcher game is missing:** check that its source is enabled in Settings, then choose **Save and rescan**.
+- **A Cemu game is missing:** check the Cemu path and folder layout above. Select the directory containing the game folder.
+- **A game launches without appearing:** check whether its launcher or emulator opened behind UmbrellaLib.
+
+## Local data
+
+UmbrellaLib stores its settings, library cache, and artwork/icon cache in the current Windows user's application-data folder. It scans local launcher and emulator information to find games. Artwork lookup may use online sources; a SteamGridDB key is optional and can be entered in Settings.
+
+## Build from source
+
+Building on Windows requires Node.js, Rust, Microsoft C++ build tools, and the Windows SDK.
 
 ```powershell
 npm install
 npm run tauri -- dev
-```
-
-Build an installer with `npm run tauri -- build`.
-
-Tauri runs the library scanner in a short-lived bundled Node process, so the Node runtime is present in the app bundle. The scanner discovers games from Steam, Epic, GOG, EA app, Ubisoft Connect, Xbox, shortcuts, Cemu, and Dolphin while replacing Electron's desktop shell with Tauri/WebView2. Settings can also add a regular PC game by its executable; these entries persist across scans.
-
-## Controls
-
-- Click a game's cover to launch it.
-- After a successful launch, the launcher minimizes so the game can come to the front.
-- Cemu launches show the emulator window; if no window appears, the launcher stays open and reports that state.
-- Right-click a game tile to open that game's settings.
-- Click a game's title to open its detail page.
-
-## Adding games
-
-- EA app and Ubisoft Connect games are discovered during scans when their source toggles are enabled.
-- For a regular PC game, open Settings, enter a display name if desired, browse to the game's main `.exe`, then choose **Add game**.
-- For Cemu, set the Cemu executable and save. The app checks Cemu's configured game paths and installed titles. You can also add a folder directly containing Wii U title folders (`meta/meta.xml` plus `code` or `content`) or `.wua` / `.wux` files.
-- For Dolphin, set Dolphin's executable and add a folder containing `.iso`, `.wbfs`, `.rvz`, `.ciso`, `.gcm`, or `.wia` files. Dolphin's configured ISO paths are scanned too.
-
-Scanning runs in the background and checks sources in parallel, leaving the cached library usable while it works. The list refreshes once at completion only if visible contents changed, and keeps the current scroll anchor. Unchanged games reuse cached artwork. The first scan after this update refreshes the older icon cache once, then saves fingerprints so later scans can skip unchanged art. A successful scan is reused for 10 minutes on the next launch, while **Scan now** always forces a fresh check.
-
-Windows shell icons are cached by source file and modification time, including icons resolved from shortcuts and file associations.
-
-The app stores its library cache and settings in Tauri's per-user app data directory. Artwork is resized and cached to reduce image memory use.
